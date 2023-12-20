@@ -1,0 +1,22 @@
+name: Deploy Production
+
+on:
+  release:
+    types: [created]
+    tags:
+      - 'v*-??-??-????'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Login to Fly
+        run: flyctl auth token --token ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Deploy to Fly.io
+        run: flyctl deploy
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
