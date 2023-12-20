@@ -3,9 +3,10 @@ import { ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 
 import { IS_PUBLIC_KEY } from '../decorator/public.decorator';
+import { Strategies } from '../types/stretegies.type';
 
 @Injectable()
-export class JwtGuard extends AuthGuard('jwt') {
+export class AccessTokenGuard extends AuthGuard(Strategies.ACCESS_TOKEN) {
   constructor(private reflector: Reflector) {
     super();
   }

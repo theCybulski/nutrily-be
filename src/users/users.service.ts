@@ -1,7 +1,6 @@
 import { ForbiddenException, Injectable } from '@nestjs/common';
 import { DbService } from '../db/db.service';
 import { User } from '@prisma/client';
-import * as argon from 'argon2';
 import { CreateUserDto } from './dto/create-user.dto';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
@@ -22,16 +21,14 @@ export class UsersService {
   }
 
   async create(createUserDto: CreateUserDto) {
-    const passwordHash = await argon.hash(createUserDto.password);
-
     try {
       const user = await this.dbService.user.create({
         data: {
           email: createUserDto.email,
-          hash: passwordHash,
+          hash: createUserDto.hash,
         },
       });
-      const { hash: _, ...returnUser } = user;
+      const { hash: _, refreshTokenHash: __, ...returnUser } = user;
       return returnUser;
     } catch (e) {
       if (e instanceof PrismaClientKnownRequestError) {
@@ -40,5 +37,22 @@ export class UsersService {
         }
       }
     }
+  }
+
+  async updateRefreshToken(userId: string, refreshTokenHash: string) {
+    return this.dbService.user.update({
+      where: { id: userId },
+      data: { refreshTokenHash },
+    });
+  }
+
+  async clearRefreshToken(userId: string) {
+    return this.dbService.user.updateMany({
+      where: {
+        id: userId,
+        refreshTokenHash: { not: null },
+      },
+      data: { refreshTokenHash: null },
+    });
   }
 }
