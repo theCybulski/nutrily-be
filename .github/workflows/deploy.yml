@@ -4,7 +4,7 @@ on:
   release:
     types: [created]
     tags:
-      - 'v*-??-??-????'
+      - 'release-production'
 
 jobs:
   deploy:
