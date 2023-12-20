@@ -7,7 +7,7 @@ app = "nutrily-be"
 primary_region = "waw"
 
 [deploy]
-  release_command = "prisma:dev:deploy"
+  release_command = "yarn run prisma:dev:deploy"
 
 [build]
 
