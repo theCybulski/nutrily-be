@@ -6,6 +6,9 @@
 app = "nutrily-be"
 primary_region = "waw"
 
+[deploy]
+  release_command = "prisma:dev:deploy"
+
 [build]
 
 [http_service]
