@@ -40,7 +40,7 @@ export class UsersService {
   }
 
   async updateRefreshToken(userId: string, refreshTokenHash: string) {
-    return this.dbService.user.update({
+    await this.dbService.user.update({
       where: { id: userId },
       data: { refreshTokenHash },
     });
