@@ -3,6 +3,8 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { Injectable } from '@nestjs/common';
 import { UsersService } from '../../users/users.service';
 import { Strategies } from '../types/stretegies.type';
+import { Request } from 'express';
+import { ACCESS_TOKEN_COOKIE_KEY } from '../constants/tokens';
 
 @Injectable()
 export class AccessTokenStrategy extends PassportStrategy(
@@ -11,10 +13,22 @@ export class AccessTokenStrategy extends PassportStrategy(
 ) {
   constructor(private usersService: UsersService) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        AccessTokenStrategy.extractJwt,
+        ExtractJwt.fromAuthHeaderAsBearerToken(),
+      ]),
       secretOrKey: process.env.JWT_ACCESS_SECRET,
       ignoreExpiration: false,
     });
+  }
+
+  private static extractJwt(req: Request) {
+    const hasToken =
+      req.cookies &&
+      ACCESS_TOKEN_COOKIE_KEY in req.cookies &&
+      req.cookies[ACCESS_TOKEN_COOKIE_KEY].length > 0;
+
+    return hasToken ? req.cookies[ACCESS_TOKEN_COOKIE_KEY] : null;
   }
 
   async validate(payload: { sub: string; email: string }) {

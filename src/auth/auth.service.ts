@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import * as argon from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 
@@ -6,6 +10,10 @@ import { AuthDto } from './dto/auth.dto';
 import { UsersService } from '../users/users.service';
 import { SignupDto } from './dto/signup.dto';
 import { Tokens } from './types/tokens.type';
+import {
+  ACCESS_TOKEN_EXPIRATION,
+  REFRESH_TOKEN_EXPIRATION,
+} from './constants/tokens';
 
 @Injectable()
 export class AuthService {
@@ -35,7 +43,7 @@ export class AuthService {
     const pwMatches = await argon.verify(user.hash, authDto.password);
     if (!pwMatches) throw new ForbiddenException('Incorrect credentials');
 
-    const { hash: _, ...returnUser } = user;
+    const { hash: _, refreshTokenHash: __, ...returnUser } = user;
     const tokens = await this.getTokens(user.id, user.email);
     await this.updateRefreshTokenHash(user.id, tokens.refreshToken);
 
@@ -66,11 +74,11 @@ export class AuthService {
 
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
-        expiresIn: '60m',
+        expiresIn: ACCESS_TOKEN_EXPIRATION,
         secret: process.env.JWT_ACCESS_SECRET,
       }),
       this.jwtService.signAsync(payload, {
-        expiresIn: '30d',
+        expiresIn: REFRESH_TOKEN_EXPIRATION,
         secret: process.env.JWT_REFRESH_SECRET,
       }),
     ]);

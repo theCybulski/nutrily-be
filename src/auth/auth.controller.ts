@@ -4,18 +4,21 @@ import {
   HttpCode,
   HttpStatus,
   Post,
-  Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthDto } from './dto/auth.dto';
 import { Public } from './decorator/public.decorator';
 import { SignupDto } from './dto/signup.dto';
-import { AuthGuard } from '@nestjs/passport';
-import { Request } from 'express';
 import { RefreshTokenGuard } from './guard/refresh-token.guard';
 import { GetUser } from './decorator/get-user.decorator';
 import { User } from '@prisma/client';
+import { Response } from 'express';
+import {
+  ACCESS_TOKEN_COOKIE_KEY,
+  REFRESH_TOKEN_COOKIE_KEY,
+} from './constants/tokens';
 
 @Controller('auth')
 export class AuthController {
@@ -31,24 +34,45 @@ export class AuthController {
   @Public()
   @HttpCode(HttpStatus.OK)
   @Post('login')
-  login(@Body() authDto: AuthDto) {
-    return this.authService.login(authDto);
+  async login(
+    @Body() authDto: AuthDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const userData = await this.authService.login(authDto);
+    res.cookie(ACCESS_TOKEN_COOKIE_KEY, userData.tokens.accessToken);
+    res.cookie(REFRESH_TOKEN_COOKIE_KEY, userData.tokens.refreshToken, {
+      httpOnly: true,
+    });
+
+    return userData;
   }
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  logout(@GetUser('id') userId: User['id']) {
-    return this.authService.logout(userId);
+  async logout(
+    @GetUser('id') userId: User['id'],
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    await this.authService.logout(userId);
+    res.cookie(ACCESS_TOKEN_COOKIE_KEY, '', { maxAge: 0 });
+    res.cookie(REFRESH_TOKEN_COOKIE_KEY, '', { maxAge: 0 });
   }
 
   @Public()
   @UseGuards(RefreshTokenGuard)
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  refreshTokens(
+  async refreshTokens(
     @GetUser('id') userId: User['id'],
     @GetUser('refreshToken') refreshToken: string,
+    @Res({ passthrough: true }) res: Response,
   ) {
-    return this.authService.refreshTokens(userId, refreshToken);
+    const tokens = await this.authService.refreshTokens(userId, refreshToken);
+    res.cookie(ACCESS_TOKEN_COOKIE_KEY, tokens.accessToken);
+    res.cookie(REFRESH_TOKEN_COOKIE_KEY, tokens.refreshToken, {
+      httpOnly: true,
+    });
+
+    return tokens;
   }
 }
