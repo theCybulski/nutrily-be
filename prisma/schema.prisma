@@ -38,19 +38,73 @@ model Nutrition {
   vitC         Float?
   vitK         Float?
   vitA         Float?
-  // INGREDIENT RELATION
+  //
   ingredient   Ingredient? @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
   ingredientId String?     @unique
+  //
+  recipe       Recipe?     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  recipeId     String?     @unique
 
   @@map("nutritions")
 }
 
+enum Measure {
+  GRAMS
+  MILILITERS
+}
+
 model Ingredient {
-  id        String     @id @default(nanoid())
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  name      String     @unique
-  nutrition Nutrition?
+  id                    String                 @id @default(nanoid())
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  name                  String                 @unique
+  measure               Measure
+  //
+  nutrition             Nutrition?
+  recipes               RecipeIngredient[]
+  substituteIngredients SubstituteIngredient[]
 
   @@map("ingredients")
+}
+
+model Recipe {
+  id              String             @id @default(uuid())
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  name            String             @unique
+  instructions    String
+  preparationTime Int?
+  nutrition       Nutrition?
+  ingredients     RecipeIngredient[]
+
+  @@map("recipes")
+}
+
+model RecipeIngredient {
+  amount       Float
+  //
+  ingredient   Ingredient             @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+  ingredientId String
+  //
+  recipe       Recipe                 @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  recipeId     String
+  // 
+  substitutes  SubstituteIngredient[]
+
+  @@id([recipeId, ingredientId])
+  @@map("recipe_ingredients")
+}
+
+model SubstituteIngredient {
+  amount                       Float
+  //
+  ingredient                   Ingredient       @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+  ingredientId                 String
+  // 
+  recipeIngredient             RecipeIngredient @relation(fields: [recipeIngredientRecipeId, recipeIngredientIngredientId], references: [recipeId, ingredientId], onDelete: Cascade)
+  recipeIngredientRecipeId     String
+  recipeIngredientIngredientId String
+
+  @@id([recipeIngredientRecipeId, recipeIngredientIngredientId, ingredientId])
+  @@map("substitute_ingredient")
 }
