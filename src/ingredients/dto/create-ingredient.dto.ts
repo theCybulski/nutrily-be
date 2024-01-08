@@ -1,6 +1,7 @@
-import { IsNotEmpty, IsString, ValidateNested } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsString, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 import { CreateNutritionDto } from './create-nutrition.dto';
+import { Measure } from '@prisma/client';
 
 export class CreateIngredientDto {
   @IsString()
@@ -10,4 +11,7 @@ export class CreateIngredientDto {
   @ValidateNested()
   @Type(() => CreateNutritionDto)
   nutrition: CreateNutritionDto;
+
+  @IsEnum(Measure)
+  measure: Measure;
 }
