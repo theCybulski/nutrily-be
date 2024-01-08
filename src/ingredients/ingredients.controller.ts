@@ -13,6 +13,11 @@ export class IngredientsController {
     return this.ingredientsService.getAll();
   }
 
+  @Get(':id')
+  getById(@Param('id') id: Ingredient['id']) {
+    return this.ingredientsService.getById(id);
+  }
+
   @Post()
   create(@Body() dto: CreateIngredientDto) {
     return this.ingredientsService.create(dto);
