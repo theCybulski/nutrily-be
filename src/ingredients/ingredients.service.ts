@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { DbService } from '../db/db.service';
 import { CreateIngredientDto } from './dto/create-ingredient.dto';
@@ -17,6 +18,16 @@ export class IngredientsService {
     const allIngredients = await this.dbService.ingredient.findMany();
 
     return allIngredients;
+  }
+
+  async getById(id: Ingredient['id']) {
+    const ingredient = await this.dbService.ingredient.findFirst({
+      where: { id },
+    });
+
+    if (!ingredient) throw new NotFoundException('Ingredient does not exist');
+
+    return ingredient;
   }
 
   async create(dto: CreateIngredientDto) {
@@ -38,15 +49,11 @@ export class IngredientsService {
   }
 
   async update(id: Ingredient['id'], dto: UpdateIngredientDto) {
-    const ingredient = await this.dbService.ingredient.findFirst({
-      where: { id },
-    });
-
-    if (!ingredient) throw new BadRequestException('Ingredient does not exist');
+    const ingredient = await this.getById(id);
 
     try {
       const updatedIngredient = await this.dbService.ingredient.update({
-        where: { id },
+        where: { id: ingredient.id },
         data: dto,
       });
       return updatedIngredient;
