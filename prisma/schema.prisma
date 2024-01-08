@@ -23,24 +23,34 @@ model User {
   @@map("users")
 }
 
-model Ingredient {
-  id        String   @id @default(nanoid())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  name      String   @unique
+model Nutrition {
+  id           String      @id @default(nanoid())
   // MACROS
-  kcal      Float
-  carbs     Float
-  fat       Float
-  protein   Float
+  kcal         Float
+  carbs        Float
+  fat          Float
+  protein      Float
   // MICROS
-  fiber     Float?
-  fe        Float?
-  ca        Float?
-  mg        Float?
-  vitC      Float?
-  vitK      Float?
-  vitA      Float?
+  fiber        Float?
+  fe           Float?
+  ca           Float?
+  mg           Float?
+  vitC         Float?
+  vitK         Float?
+  vitA         Float?
+  // INGREDIENT RELATION
+  ingredient   Ingredient? @relation(fields: [ingredientId], references: [id])
+  ingredientId String?     @unique
+
+  @@map("nutritions")
+}
+
+model Ingredient {
+  id        String     @id @default(nanoid())
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  name      String     @unique
+  nutrition Nutrition?
 
   @@map("ingredients")
 }
