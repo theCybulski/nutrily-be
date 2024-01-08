@@ -8,6 +8,7 @@ export class CreateIngredientDto {
   @IsNotEmpty()
   name: string;
 
+  @IsNotEmpty()
   @ValidateNested()
   @Type(() => CreateNutritionDto)
   nutrition: CreateNutritionDto;
