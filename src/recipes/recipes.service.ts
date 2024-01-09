@@ -6,6 +6,23 @@ import { CreateRecipeDto } from './dto/create-recipe.dto';
 import { IngredientsService } from '../ingredients/ingredients.service';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { nutritionSelectSchema } from '../common/select-schemas/nutrition.select-schema';
+import { CreateNutritionDto } from '../common/dto/create-nutrition.dto';
+import { calculateNutritionValue } from '../common/utils/calculate-nutrition-value';
+
+const nutritionDtoDefaultValues: CreateNutritionDto = {
+  kcal: 0,
+  carbs: 0,
+  fat: 0,
+  protein: 0,
+  fiber: 0,
+  fe: 0,
+  ca: 0,
+  mg: 0,
+  vitC: 0,
+  vitK: 0,
+  vitA: 0,
+};
+const nutritionDtoKeys = Object.keys(nutritionDtoDefaultValues);
 
 const RecipeSelectSchema = {
   id: true,
@@ -56,35 +73,14 @@ export class RecipesService {
   }
 
   async create(dto: CreateRecipeDto) {
-    const flattenedIngredients = dto.ingredients.flatMap((mainIngredient) => {
-      const mainIngredientData = {
-        id: uuidv4(),
-        ingredientId: mainIngredient.ingredientId,
-        amount: mainIngredient.amount,
-        substituteForId: null,
-      };
-
-      const substituteIngredientsData = mainIngredient.substitutes.map(
-        (subIngredient) => ({
-          id: uuidv4(),
-          ingredientId: subIngredient.ingredientId,
-          amount: subIngredient.amount,
-          substituteForId: mainIngredientData.id,
-        }),
-      );
-
-      return [mainIngredientData, ...substituteIngredientsData];
-    });
-
-    const ingredientsLookupMap = new Map(
-      flattenedIngredients.map((ingredient) => [
-        ingredient.ingredientId,
-        ingredient,
-      ]),
-    );
-
-    const ingredientEntities = await this.ingredientsService.getAllByIds(
-      Array.from(ingredientsLookupMap.keys()),
+    const flattenedIngredients = this.flattenIngredients(dto.ingredients);
+    const ingredientsLookupMap =
+      this.createIngredientsLookupMap(flattenedIngredients);
+    const ingredientEntities =
+      await this.verifyIngredientsExist(ingredientsLookupMap);
+    const nutritionDto: CreateNutritionDto = this.calculateNutrition(
+      ingredientEntities,
+      ingredientsLookupMap,
     );
 
     try {
@@ -93,7 +89,7 @@ export class RecipesService {
           name: dto.name,
           instructions: dto.instructions,
           preparationTime: dto.preparationTime,
-          // nutrition: { create: dto.nutrition }, // TODO: calculate nutrition from ingredients
+          nutrition: { create: nutritionDto },
           ingredients: {
             createMany: {
               data: ingredientEntities.map((ingredient) => {
@@ -119,5 +115,70 @@ export class RecipesService {
 
       throw e;
     }
+  }
+
+  private flattenIngredients(ingredients: CreateRecipeDto['ingredients']) {
+    return ingredients.flatMap((ingredient) => {
+      const mainIngredientData = {
+        id: uuidv4(),
+        ingredientId: ingredient.ingredientId,
+        amount: ingredient.amount,
+        substituteForId: null,
+      };
+
+      const substituteIngredientsData = (ingredient.substitutes || []).map(
+        (subIngredient) => ({
+          id: uuidv4(),
+          ingredientId: subIngredient.ingredientId,
+          amount: subIngredient.amount,
+          substituteForId: mainIngredientData.id,
+        }),
+      );
+
+      return [mainIngredientData, ...substituteIngredientsData];
+    });
+  }
+
+  private createIngredientsLookupMap(
+    flattenedIngredients: ReturnType<typeof this.flattenIngredients>,
+  ) {
+    return new Map(
+      flattenedIngredients.map((ingredient) => [
+        ingredient.ingredientId,
+        ingredient,
+      ]),
+    );
+  }
+
+  private verifyIngredientsExist(
+    ingredientsLookupMap: ReturnType<typeof this.createIngredientsLookupMap>,
+  ) {
+    return this.ingredientsService.getAllByIds(
+      Array.from(ingredientsLookupMap.keys()),
+    );
+  }
+
+  private calculateNutrition(
+    ingredientEntities: Awaited<ReturnType<typeof this.verifyIngredientsExist>>,
+    ingredientsLookupMap: ReturnType<typeof this.createIngredientsLookupMap>,
+  ) {
+    return ingredientEntities.reduce((acc, ingredient) => {
+      const ingredientData = ingredientsLookupMap.get(ingredient.id);
+
+      if (ingredientData.substituteForId) return acc; // skip substitutes
+
+      return nutritionDtoKeys.reduce(
+        (acc, key) => ({
+          ...acc,
+          [key]:
+            acc[key] +
+            calculateNutritionValue(
+              ingredient.nutrition[key],
+              ingredientData.amount,
+            ),
+        }),
+        acc as { [key in keyof typeof acc]: number },
+      );
+    }, nutritionDtoDefaultValues);
   }
 }
