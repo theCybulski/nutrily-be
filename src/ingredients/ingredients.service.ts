@@ -31,6 +31,23 @@ export class IngredientsService {
     return ingredient;
   }
 
+  async getAllByIds(ids: Ingredient['id'][]) {
+    const ingredients = await this.dbService.ingredient.findMany({
+      where: { id: { in: ids } },
+      include: { nutrition: true, recipes: true },
+    });
+
+    const existingIds = new Set(ingredients.map((ingredient) => ingredient.id));
+    const notExisting = ids.filter((id) => !existingIds.has(id));
+
+    if (notExisting.length > 0)
+      throw new NotFoundException(
+        `Following ingredients do not exist: ${notExisting.join(', ')}`,
+      );
+
+    return ingredients;
+  }
+
   async create(dto: CreateIngredientDto) {
     if (!dto.nutrition)
       throw new BadRequestException('Ingredient must have nutrition');
