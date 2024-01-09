@@ -9,24 +9,22 @@ import { DbService } from '../db/db.service';
 import { CreateRecipeDto } from './dto/create-recipe.dto';
 import { IngredientsService } from '../ingredients/ingredients.service';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
-import { nutritionSelectSchema } from '../common/select-schemas/nutrition.select-schema';
 import { CreateNutritionDto } from '../common/dto/create-nutrition.dto';
 import { calculateNutritionValue } from '../common/utils/calculate-nutrition-value';
 
-const nutritionDtoDefaultValues: CreateNutritionDto = {
-  kcal: 0,
-  carbs: 0,
-  fat: 0,
-  protein: 0,
-  fiber: 0,
-  fe: 0,
-  ca: 0,
-  mg: 0,
-  vitC: 0,
-  vitK: 0,
-  vitA: 0,
+const NutritionSelectSchema = {
+  kcal: true,
+  carbs: true,
+  fat: true,
+  protein: true,
+  fiber: true,
+  fe: true,
+  ca: true,
+  mg: true,
+  vitC: true,
+  vitK: true,
+  vitA: true,
 };
-const nutritionDtoKeys = Object.keys(nutritionDtoDefaultValues);
 
 const RecipeSelectSchema = {
   id: true,
@@ -35,7 +33,7 @@ const RecipeSelectSchema = {
   name: true,
   instructions: true,
   preparationTime: true,
-  nutrition: nutritionSelectSchema,
+  nutrition: { select: NutritionSelectSchema },
   ingredients: {
     where: { substituteForId: null }, // only main ingredients
     select: {
@@ -166,6 +164,21 @@ export class RecipesService {
     ingredientEntities: Awaited<ReturnType<typeof this.verifyIngredientsExist>>,
     ingredientsLookupMap: ReturnType<typeof this.createIngredientsLookupMap>,
   ) {
+    const nutritionDtoDefaultValues: CreateNutritionDto = {
+      kcal: 0,
+      carbs: 0,
+      fat: 0,
+      protein: 0,
+      fiber: 0,
+      fe: 0,
+      ca: 0,
+      mg: 0,
+      vitC: 0,
+      vitK: 0,
+      vitA: 0,
+    };
+    const nutritionDtoKeys = Object.keys(nutritionDtoDefaultValues);
+
     return ingredientEntities.reduce((acc, ingredient) => {
       const ingredientData = ingredientsLookupMap.get(ingredient.id);
 
