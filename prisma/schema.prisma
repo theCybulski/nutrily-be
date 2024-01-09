@@ -54,15 +54,14 @@ enum Measure {
 }
 
 model Ingredient {
-  id                    String                 @id @default(nanoid())
-  createdAt             DateTime               @default(now())
-  updatedAt             DateTime               @updatedAt
-  name                  String                 @unique
-  measure               Measure
+  id        String             @id @default(nanoid())
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  name      String             @unique
+  measure   Measure
   //
-  nutrition             Nutrition?
-  recipes               RecipeIngredient[]
-  substituteIngredients SubstituteIngredient[]
+  nutrition Nutrition?
+  recipes   RecipeIngredient[]
 
   @@map("ingredients")
 }
@@ -81,30 +80,20 @@ model Recipe {
 }
 
 model RecipeIngredient {
-  amount       Float
+  id              String             @id @default(uuid())
+  amount          Float
   //
-  ingredient   Ingredient             @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
-  ingredientId String
+  ingredient      Ingredient         @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+  ingredientId    String
   //
-  recipe       Recipe                 @relation(fields: [recipeId], references: [id], onDelete: Cascade)
-  recipeId     String
-  // 
-  substitutes  SubstituteIngredient[]
+  recipe          Recipe             @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  recipeId        String
+  //
+  substitutes     RecipeIngredient[] @relation("Substitute")
+  substituteForId String?
+  substituteFor   RecipeIngredient?  @relation("Substitute", fields: [substituteForId], references: [id])
 
-  @@id([recipeId, ingredientId])
+  @@unique([recipeId, ingredientId])
+  @@unique([recipeId, ingredientId, substituteForId])
   @@map("recipe_ingredients")
-}
-
-model SubstituteIngredient {
-  amount                       Float
-  //
-  ingredient                   Ingredient       @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
-  ingredientId                 String
-  // 
-  recipeIngredient             RecipeIngredient @relation(fields: [recipeIngredientRecipeId, recipeIngredientIngredientId], references: [recipeId, ingredientId], onDelete: Cascade)
-  recipeIngredientRecipeId     String
-  recipeIngredientIngredientId String
-
-  @@id([recipeIngredientRecipeId, recipeIngredientIngredientId, ingredientId])
-  @@map("substitute_ingredient")
 }
