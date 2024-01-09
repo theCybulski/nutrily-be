@@ -34,7 +34,7 @@ export class IngredientsService {
   async getAllByIds(ids: Ingredient['id'][]) {
     const ingredients = await this.dbService.ingredient.findMany({
       where: { id: { in: ids } },
-      include: { nutrition: true },
+      include: { nutrition: true, recipes: true },
     });
 
     const existingIds = new Set(ingredients.map((ingredient) => ingredient.id));

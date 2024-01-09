@@ -1,4 +1,5 @@
 import {
+  ArrayMinSize,
   IsArray,
   IsNotEmpty,
   IsNumber,
@@ -22,6 +23,7 @@ export class CreateRecipeIngredientDto {
 
   @IsOptional()
   @IsArray()
+  @ArrayMinSize(1)
   @ValidateNested({ each: true })
   @Type(() => CreateRecipeIngredientDto)
   substitutes: Omit<CreateRecipeIngredientDto, 'substitutes'>[];
