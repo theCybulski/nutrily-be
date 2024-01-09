@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 
 import { DbService } from '../db/db.service';
@@ -113,7 +117,7 @@ export class RecipesService {
       if (e instanceof PrismaClientKnownRequestError && e.code === 'P2002')
         throw new ForbiddenException('Recipe with this name already exists');
 
-      throw e;
+      throw new BadRequestException();
     }
   }
 

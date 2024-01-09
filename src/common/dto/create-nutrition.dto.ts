@@ -1,58 +1,58 @@
-import { IsNotEmpty, IsNumber, IsOptional, IsPositive } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, Min } from 'class-validator';
 
 export class CreateNutritionDto {
-  @IsNumber()
-  @IsPositive()
+  @IsNumber({ allowNaN: false, allowInfinity: false })
+  @Min(0)
   @IsNotEmpty()
   kcal: number;
 
-  @IsNumber()
-  @IsPositive()
+  @IsNumber({ allowNaN: false, allowInfinity: false })
+  @Min(0)
   @IsNotEmpty()
   carbs: number;
 
-  @IsNumber()
-  @IsPositive()
+  @IsNumber({ allowNaN: false, allowInfinity: false })
+  @Min(0)
   @IsNotEmpty()
   fat: number;
 
-  @IsNumber()
-  @IsPositive()
+  @IsNumber({ allowNaN: false, allowInfinity: false })
+  @Min(0)
   @IsNotEmpty()
   protein: number;
 
-  @IsNumber()
-  @IsPositive()
+  @IsNumber({ allowNaN: false, allowInfinity: false })
+  @Min(0)
   @IsOptional()
   fiber?: number;
 
-  @IsNumber()
-  @IsPositive()
+  @IsNumber({ allowNaN: false, allowInfinity: false })
+  @Min(0)
   @IsOptional()
   fe?: number;
 
-  @IsNumber()
-  @IsPositive()
+  @IsNumber({ allowNaN: false, allowInfinity: false })
+  @Min(0)
   @IsOptional()
   ca?: number;
 
-  @IsNumber()
-  @IsPositive()
+  @IsNumber({ allowNaN: false, allowInfinity: false })
+  @Min(0)
   @IsOptional()
   mg?: number;
 
-  @IsNumber()
-  @IsPositive()
+  @IsNumber({ allowNaN: false, allowInfinity: false })
+  @Min(0)
   @IsOptional()
   vitC?: number;
 
-  @IsNumber()
-  @IsPositive()
+  @IsNumber({ allowNaN: false, allowInfinity: false })
+  @Min(0)
   @IsOptional()
   vitK?: number;
 
-  @IsNumber()
-  @IsPositive()
+  @IsNumber({ allowNaN: false, allowInfinity: false })
+  @Min(0)
   @IsOptional()
   vitA?: number;
 }

@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import { DbService } from '../db/db.service';
 import { User } from '@prisma/client';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -31,11 +35,10 @@ export class UsersService {
       const { hash: _, refreshTokenHash: __, ...returnUser } = user;
       return returnUser;
     } catch (e) {
-      if (e instanceof PrismaClientKnownRequestError) {
-        if (e.code === 'P2002') {
-          throw new ForbiddenException('User already exists');
-        }
-      }
+      if (e instanceof PrismaClientKnownRequestError && e.code === 'P2002')
+        throw new ForbiddenException('User already exists');
+
+      throw new BadRequestException();
     }
   }
 

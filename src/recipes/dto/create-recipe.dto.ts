@@ -3,8 +3,8 @@ import {
   IsArray,
   IsNotEmpty,
   IsNumber,
-  IsPositive,
   IsString,
+  Min,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -20,8 +20,8 @@ export class CreateRecipeDto {
   @IsNotEmpty()
   instructions: string;
 
-  @IsNumber()
-  @IsPositive()
+  @IsNumber({ allowNaN: false, allowInfinity: false })
+  @Min(0)
   preparationTime: number;
 
   @IsNotEmpty()
